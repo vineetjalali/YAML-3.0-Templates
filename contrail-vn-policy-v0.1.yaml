@@ -61,7 +61,7 @@ resources:
                         network_policy_entries_policy_rule_dst_ports_end_port: { get_param: dst_port_end }
                                                               }],
                 network_policy_entries_policy_rule_dst_addresses: [{
-                        network_policy_entries_policy_rule_dst_addresses_virtual_network: { get_param: left_vn_fqdn }
+                        network_policy_entries_policy_rule_dst_addresses_virtual_network: { get_param: right_vn_fqdn }
                                                               }],
                 network_policy_entries_policy_rule_src_addresses: [{
                         network_policy_entries_policy_rule_src_addresses_virtual_network: { get_param: left_vn_fqdn }
