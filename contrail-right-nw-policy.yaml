@@ -1,0 +1,95 @@
+heat_template_version: 2015-04-30
+
+description: >
+  HOT template to creates a virtual network with one subnet each.
+  set allow-transit, forwarding_mode and route-targets
+parameters:
+  private_net_1_name:
+    type: string
+    description: Name of private network to be created
+  private_net_1_prefix:
+    type: string
+    description: Private network address prefix
+  private_net_1_gateway:
+    type: string
+    description: Private network address prefix
+  private_net_1_prefix_len:
+    type: string
+    description: Private network address prefix len
+  virtual_network_properties_rpf:
+    type: string
+    description: rpf for the VirtualNetwork
+  is_shared:
+    type: boolean
+    description: is_shared for the VirtualNetwork
+  allow_transit:
+    type: boolean
+    description: Private network allow transit
+  forwarding_mode:
+    type: string
+    description: Private network forwarding_mode
+  is_enable_dhcp:
+    type: boolean
+    description: enable_dhcp for the VirtualNetwork
+  private_net_1_pools_start:
+    type: string
+    description: start for the VirtualNetwork
+  private_net_1_pools_end:
+    type: string
+    description: end for the VirtualNetwork
+  route_target_1:
+    type: string
+    description: Private network route-target
+  fq_name:
+    type: string
+    description: fq_name for the VirtualNetwork
+  project:
+    type: string
+    description: project for the VirtualNetwork
+  vn_policy:
+    type: string
+    description: vn policy
+resources:
+  template_NetworkIpam_1:
+    type: OS::Contrail::NetworkIpam
+    properties:
+      name: { get_param: private_net_1_name }
+
+  template_VirtualNetwork_1:
+    type: OS::Contrail::VirtualNetwork
+    depends_on: [ template_NetworkIpam_1 ]
+    properties:
+      fq_name: { get_param: fq_name }
+      name: { get_param: private_net_1_name }
+      network_policy_refs: { get_param: vn_policy }
+      virtual_network_properties:
+        {
+          virtual_network_properties_allow_transit: { get_param: allow_transit },
+          virtual_network_properties_forwarding_mode: { get_param: forwarding_mode },
+          virtual_network_properties_rpf: { get_param: virtual_network_properties_rpf },
+        }
+      route_target_list:
+        {
+          route_target_list_route_target: [{ get_param: route_target_1 }],
+        }
+      is_shared: { get_param: is_shared }
+      network_ipam_refs: { get_resource: template_NetworkIpam_1 }
+      network_ipam_refs_data:
+        {
+          network_ipam_refs_data_ipam_subnets:
+            [{
+              network_ipam_refs_data_ipam_subnets_subnet:
+                {
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: private_net_1_prefix },
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: private_net_1_prefix_len },
+                },
+              network_ipam_refs_data_ipam_subnets_default_gateway: { get_param: private_net_1_gateway },
+              network_ipam_refs_data_ipam_subnets_enable_dhcp: { get_param: is_enable_dhcp },
+              network_ipam_refs_data_ipam_subnets_allocation_pools:
+                [{
+                  network_ipam_refs_data_ipam_subnets_allocation_pools_start: { get_param: private_net_1_pools_start },
+                  network_ipam_refs_data_ipam_subnets_allocation_pools_end: { get_param: private_net_1_pools_end },
+                }],
+            }],
+         }
+      project: { get_param: project }
