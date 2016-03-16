@@ -1,0 +1,168 @@
+heat_template_version: 2015-04-30
+
+parameters:
+  service_template_name:
+    type: string
+    label: Service template fq name
+    description: Service template for port tuple
+  service_template_properties_version:
+    type: string
+    description: Indicates service version
+  service_template_properties_service_mode:
+    type: string
+    description: service mode
+  service_template_properties_service_type:
+    type: string
+    description: service type
+  service_template_properties_image_name:
+    type: string
+    description: Name of the image
+  service_template_properties_flavor:
+    type: string
+    description: Flavor
+  service_template_properties_ordered_interfaces:
+    type: string
+    description: Indicates service interfaces are ordered
+  service_template_properties_interface_type_service_interface_type_1:
+    type: string
+    description: service_interface_type for the ServiceTemplate
+  service_template_properties_interface_type_shared_ip_1:
+    type: boolean
+    description: shared_ip for the ServiceTemplate
+  service_template_properties_interface_type_static_route_enable_1:
+    type: boolean
+    description: static_route_enable for the ServiceTemplate
+  service_template_properties_interface_type_service_interface_type_2:
+    type: string
+    description: service_interface_type for the ServiceTemplate
+  service_template_properties_interface_type_shared_ip_2:
+    type: boolean
+    description: shared_ip for the ServiceTemplate
+  service_template_properties_interface_type_static_route_enable_2:
+    type: boolean
+    description: static_route_enable for the ServiceTemplate
+  service_template_properties_interface_type_service_interface_type_3:
+    type: string
+    description: service_interface_type for the ServiceTemplate
+  service_template_properties_interface_type_shared_ip_3:
+    type: boolean
+    description: shared_ip for the ServiceTemplate
+  service_template_properties_interface_type_static_route_enable_3:
+    type: boolean
+    description: static_route_enable for the ServiceTemplate
+  service_template_properties_availability_zone_enable:
+    type: string
+    description: Indicates availability zone is enabled
+  service_template_properties_service_virtualization_type:
+    type: string
+    description: Indicates virtualization type
+  service_instance_name:
+    type: string
+    label: Service instance fq name
+    description: Service instance for port tuple
+  management_network:
+    type: string
+    description: Name of management network to be created
+  left_network:
+    type: string
+    description: Name of left network to be created
+  right_network:
+    type: string
+    description: Name of right network to be created
+  route_prefix_1_0:
+    type: string
+    description: prefix for the ServiceInstance
+  route_prefix_1_1:
+    type: string
+    description: prefix for the ServiceInstance
+  availability_zone:
+    type: string
+    description: availability zone in form of Zone:Host
+  max_num_si_instances:
+    type: number
+    description: maximum number of firewall instances for scaling
+  si_scaling:
+    type: string
+    description: Indicates whether service scaling is enabled
+  domain:
+    type: string
+    description: Name of the Domain
+  project:
+    type: string
+    description: project for the ServiceInstance
+  fq_name:
+    type: string
+    description: fq_name for the ServiceInstance
+
+resources:
+  template_ServiceTemplate:
+    type: OS::Contrail::ServiceTemplate
+    properties:
+      name: { get_param: service_template_name }
+      service_template_properties:
+        {
+          service_template_properties_version: { get_param: service_template_properties_version },
+          service_template_properties_service_mode: { get_param: service_template_properties_service_mode },
+          service_template_properties_service_type: { get_param: service_template_properties_service_type },
+          service_template_properties_image_name: { get_param: service_template_properties_image_name },
+          service_template_properties_service_scaling: { get_param: si_scaling },
+          service_template_properties_interface_type:
+            [
+              {
+              service_template_properties_interface_type_service_interface_type: { get_param: service_template_properties_interface_type_service_interface_type_1 },
+              service_template_properties_interface_type_shared_ip: { get_param: service_template_properties_interface_type_shared_ip_1 },
+              service_template_properties_interface_type_static_route_enable: { get_param: service_template_properties_interface_type_static_route_enable_1 },
+              },
+              {
+              service_template_properties_interface_type_service_interface_type: { get_param: service_template_properties_interface_type_service_interface_type_2 },
+              service_template_properties_interface_type_shared_ip: { get_param: service_template_properties_interface_type_shared_ip_2 },
+              service_template_properties_interface_type_static_route_enable: { get_param: service_template_properties_interface_type_static_route_enable_2 },
+              },
+              {
+              service_template_properties_interface_type_service_interface_type: { get_param: service_template_properties_interface_type_service_interface_type_3 },
+              service_template_properties_interface_type_shared_ip: { get_param: service_template_properties_interface_type_shared_ip_3 },
+              service_template_properties_interface_type_static_route_enable: { get_param: service_template_properties_interface_type_static_route_enable_3 },
+              }
+            ],
+          service_template_properties_flavor: { get_param: service_template_properties_flavor },
+          service_template_properties_ordered_interfaces: { get_param: service_template_properties_ordered_interfaces },
+          service_template_properties_service_virtualization_type: { get_param: service_template_properties_service_virtualization_type },
+          service_template_properties_availability_zone_enable: { get_param: service_template_properties_availability_zone_enable },
+        }
+      domain: { get_param: domain }
+
+  template_ServiceInstance:
+    type: OS::Contrail::ServiceInstance
+    properties:
+      name: { get_param: service_instance_name }
+      fq_name: { get_param: fq_name }
+      service_template_refs: { get_resource: template_ServiceTemplate }
+      service_instance_properties:
+        {
+          service_instance_properties_availability_zone: { get_param: availability_zone },
+          service_instance_properties_interface_list:
+            [{
+              service_instance_properties_interface_list_virtual_network: { get_param: management_network },
+             },
+             {
+              service_instance_properties_interface_list_virtual_network: { get_param: left_network },
+             },
+             {
+              service_instance_properties_interface_list_virtual_network: { get_param: right_network },
+              service_instance_properties_interface_list_static_routes:
+                {
+                  service_instance_properties_interface_list_static_routes_route:
+                    [{
+                      service_instance_properties_interface_list_static_routes_route_prefix: { get_param: route_prefix_1_0 },
+                    },
+                    {
+                      service_instance_properties_interface_list_static_routes_route_prefix: { get_param: route_prefix_1_1 },
+                    }],
+                },
+            }],
+      service_instance_properties_scale_out:
+        {
+          service_instance_properties_scale_out_max_instances: { get_param: max_num_si_instances },
+        },
+        }
+      project: { get_param: project }
