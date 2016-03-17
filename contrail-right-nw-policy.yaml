@@ -62,6 +62,14 @@ resources:
       fq_name: { get_param: fq_name }
       name: { get_param: private_net_1_name }
       network_policy_refs: { get_param: vn_policy }
+      network_policy_refs_data:
+        {
+          network_policy_refs_data_sequence:
+            {
+              network_policy_refs_data_sequence_major: 0,
+              network_policy_refs_data_sequence_minor: 0,
+            },
+        }
       virtual_network_properties:
         {
           virtual_network_properties_allow_transit: { get_param: allow_transit },
