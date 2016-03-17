@@ -1,0 +1,168 @@
+heat_template_version: 2015-04-30
+
+description: >
+  HOT template to create a VirtualNetwork:
+
+parameters:
+  vn_name:
+    type: string
+    description: name for the VirtualNetwork
+  fq_name:
+    type: string
+    description: fq_name for the VirtualNetwork
+  virtual_network_properties_allow_transit:
+    type: boolean
+    description: allow_transit for the VirtualNetwork
+  virtual_network_properties_forwarding_mode:
+    type: string
+    description: forwarding_mode for the VirtualNetwork
+  virtual_network_properties_rpf:
+    type: string
+    description: rpf for the VirtualNetwork
+  display_name:
+    type: string
+    description: display_name for the VirtualNetwork
+  route_target_list_route_target:
+    type: string
+    description: route_target for the VirtualNetwork
+  is_shared:
+    type: boolean
+    description: is_shared for the VirtualNetwork
+  network_ipam_refs:
+    type: string
+    description: network_ipam_refs for the VirtualNetwork
+  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix:
+    type: string
+    description: ip_prefix for the VirtualNetwork
+  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len:
+    type: number
+    description: ip_prefix_len for the VirtualNetwork
+  network_ipam_refs_data_ipam_subnets_default_gateway:
+    type: string
+    description: default_gateway for the VirtualNetwork
+  network_ipam_refs_data_ipam_subnets_enable_dhcp:
+    type: boolean
+    description: enable_dhcp for the VirtualNetwork
+  network_ipam_refs_data_ipam_subnets_allocation_pools_start:
+    type: string
+    description: start for the VirtualNetwork
+  network_ipam_refs_data_ipam_subnets_allocation_pools_end:
+    type: string
+    description: end for the VirtualNetwork
+  project:
+    type: string
+    description: project for the VirtualNetwork
+  network_policy_refs_name:
+    type: string
+    description: Name of the Network Policy
+  simple_action:
+    type: string
+    description: Pass or Deny
+  apply_service:
+    type: string
+    description: apply_service for the NetworkPolicy
+  protocol:
+    type: string
+    description: Protocol
+  src_port_end:
+    type: number
+    description: End of the Source Port Range
+  src_port_start:
+    type: number
+    description: Start of the Source Port Range
+  direction:
+    type: string
+    description: Direction of the Policy
+  dst_port_end:
+    type: number
+    description: End of the Destination Port Range
+  dst_port_start:
+    type: number
+    description: Start of the Destination Port Range
+
+ # VN Parameters
+  left_vn_fqdn:
+    type: string
+    description: FQ Name of the left network
+  right_vn_fqdn:
+    type: string
+    description: FQ Name of the left network
+
+resources:
+  template_network_ipam_refs:
+    type: OS::Contrail::NetworkIpam
+    properties:
+      name: { get_param: network_ipam_refs }
+
+  template_VirtualNetwork:
+    type: OS::Contrail::VirtualNetwork
+    depends_on: [ template_network_ipam_refs ]
+    properties:
+      name: { get_param: vn_name }
+      network_policy_refs: { list_join: [':', { get_attr: [ template_NetworkPolicy, fq_name ] } ] }
+      network_policy_refs_data:
+        {
+          network_policy_refs_data_sequence:
+            {
+              network_policy_refs_data_sequence_major: 0,
+              network_policy_refs_data_sequence_minor: 0,
+            },
+        }
+      virtual_network_properties:
+        {
+          virtual_network_properties_allow_transit: { get_param: virtual_network_properties_allow_transit },
+          virtual_network_properties_forwarding_mode: { get_param: virtual_network_properties_forwarding_mode },
+        }
+      route_target_list:
+        {
+          route_target_list_route_target: [{ get_param: route_target_list_route_target }],
+        }
+      is_shared: { get_param: is_shared }
+      network_ipam_refs: { get_resource: template_network_ipam_refs }
+      network_ipam_refs_data:
+        {
+          network_ipam_refs_data_ipam_subnets:
+            [{
+              network_ipam_refs_data_ipam_subnets_subnet:
+                {
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix: { get_param: network_ipam_refs_data_ipam_subnets_subnet_ip_prefix },
+                  network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len: { get_param: network_ipam_refs_data_ipam_subnets_subnet_ip_prefix_len },
+                },
+              network_ipam_refs_data_ipam_subnets_default_gateway: { get_param: network_ipam_refs_data_ipam_subnets_default_gateway },
+              network_ipam_refs_data_ipam_subnets_enable_dhcp: { get_param: network_ipam_refs_data_ipam_subnets_enable_dhcp },
+              network_ipam_refs_data_ipam_subnets_allocation_pools:
+                [{
+                  network_ipam_refs_data_ipam_subnets_allocation_pools_start: { get_param: network_ipam_refs_data_ipam_subnets_allocation_pools_start },
+                  network_ipam_refs_data_ipam_subnets_allocation_pools_end: { get_param: network_ipam_refs_data_ipam_subnets_allocation_pools_end },
+                }],
+            }],
+          }
+
+  template_NetworkPolicy:
+    type: OS::Contrail::NetworkPolicy
+    properties:
+      name: { get_param: network_policy_refs_name }
+      fq_name: { get_param: fq_name }
+      network_policy_entries:  { network_policy_entries_policy_rule: [{
+        network_policy_entries_policy_rule_direction: { get_param: direction },
+        network_policy_entries_policy_rule_protocol: { get_param: protocol },
+        network_policy_entries_policy_rule_src_ports: [{
+            network_policy_entries_policy_rule_src_ports_start_port: { get_param: src_port_start },
+            network_policy_entries_policy_rule_src_ports_end_port: { get_param: src_port_end }
+                                }],
+        network_policy_entries_policy_rule_dst_ports: [{
+            network_policy_entries_policy_rule_dst_ports_start_port: { get_param: dst_port_start },
+            network_policy_entries_policy_rule_dst_ports_end_port: { get_param: dst_port_end }
+                                }],
+        network_policy_entries_policy_rule_dst_addresses: [{
+            network_policy_entries_policy_rule_dst_addresses_virtual_network: { get_param: right_vn_fqdn }
+                                }],
+        network_policy_entries_policy_rule_src_addresses: [{
+            network_policy_entries_policy_rule_src_addresses_virtual_network: { get_param: left_vn_fqdn }
+                                }],
+        network_policy_entries_policy_rule_action_list: {
+                network_policy_entries_policy_rule_action_list_simple_action: { get_param: simple_action },
+                network_policy_entries_policy_rule_action_list_apply_service: [{ get_param: apply_service }],
+                                    },
+                                       }]
+    }
