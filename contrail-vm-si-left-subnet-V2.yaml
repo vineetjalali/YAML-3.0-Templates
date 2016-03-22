@@ -1,5 +1,10 @@
 heat_template_version: 2015-04-30
 
+Description: >
+    HOT Template Creates 1 Port Tuple, attaches it to Service Instance, Creates Service Template, 
+    Creates 3 VMI Instance Per Port Tuple, Creates 1 VM's through Nova Server, Attaches Specific Subnet in VMI-2 instance based upon UUID of the Subnet
+    Assumption, Virtual Networks have been created already
+    
 parameters:
 
   management_network:
